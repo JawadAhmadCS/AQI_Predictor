@@ -1,2 +1,3 @@
 timestamp,city,state,country,lat,lon,aqius,mainus,aqicn,maincn,temperature,humidity,pressure,wind_direction,wind_speed,hour,day,month,weekday,aqius_change,aqius_future
 2025-08-03 21:00:00+00:00,Islamabad,Islamabad,Pakistan,33.697612,72.971079,81,p2,36,p2,27,68,1001,71,3.13,21,3,8,6,0.0,92.0
+2025-08-03 22:00:00+00:00,Islamabad,Islamabad,Pakistan,33.697612,72.971079,85,p2,39,p2,27,71,1001,71,4.62,22,3,8,6,4.0,88.0
