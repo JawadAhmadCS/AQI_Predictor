@@ -16,7 +16,8 @@ df['month'] = df['timestamp'].dt.month
 df['weekday'] = df['timestamp'].dt.weekday
 
 df['aqius_change'] = df['aqius'].diff().fillna(0)
-df['aqius_future'] = df['aqius'].shift(-3)  #after 3 hours
+df['aqius_future'] = df['aqius'].shift(-3)
 
-df.to_csv("data/features.csv", index=False)
+df.dropna(subset=['aqius_future']).to_csv("data/features.csv", index=False)
 print("Features generated and saved.")
+
