@@ -1,11 +1,10 @@
-# scripts/getWeather.py
-
 import requests
 import csv
 import os
 from datetime import datetime
+import streamlit as st
 
-API_KEY = "be991a39-8aa8-4454-a387-61095700f0b7"
+API_KEY = st.secrets["airvisual"]["api_key"]
 city = "Islamabad"
 state = "Islamabad"
 country = "Pakistan"
