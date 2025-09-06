@@ -7,6 +7,7 @@ import plotly.express as px
 import plotly.graph_objects as go
 from plotly.subplots import make_subplots
 import numpy as np
+import calendar
 
 # Page Configuration
 st.set_page_config(
@@ -106,7 +107,7 @@ st.markdown("""
 <div class="main-header">
     <h1>Air Quality Index (AQI) Prediction Dashboard</h1>
     <h3>📍 Islamabad, Pakistan</h3>
-    <p>Real-time air quality monitoring and 3-hour predictions</p>
+    <p>Real-time air quality monitoring and 3-day predictions</p>
 </div>
 """, unsafe_allow_html=True)
 
@@ -333,18 +334,19 @@ else:
     st.warning("⚠️ Historical feature data not available yet. Please wait for data collection to begin.")
 
 # Prediction Section
-st.markdown("## 🔮 AQI Predictions (Next 3 Hours)")
+st.markdown("## 🔮 AQI Predictions (Next 3 Days)")
 
 model_path = "models/aqi_model.pkl"
 if os.path.exists(model_path) and os.path.exists(feature_file):
     try:
+        # Load model and data
         model = joblib.load(model_path)
-        df_feat_clean = df_feat.dropna()
+        df_feat_clean = pd.read_csv(feature_file).dropna()
         
         if len(df_feat_clean) > 0:
             last_row = df_feat_clean.iloc[-1:]
             
-            # Prepare features for prediction
+            # Prepare features for prediction - using exact same columns as your training
             feature_columns = ["hour", "day", "month", "weekday", "aqius", "aqius_change"]
             available_features = [col for col in feature_columns if col in last_row.columns]
             
@@ -355,85 +357,188 @@ if os.path.exists(model_path) and os.path.exists(feature_file):
                 timestamps = []
                 current_time = pd.to_datetime(last_row['timestamp'].iloc[0])
                 
-                # Generate predictions
-                for i in range(3):
+                # Generate predictions for 72 hours (3 days) - using your exact logic
+                for i in range(72):
                     pred = model.predict(X)[0]
-                    predictions.append(max(0, round(pred, 1)))  # Ensure non-negative AQI
-                    
-                    # Update features for next prediction
-                    if i < 2:  # Don't update after last prediction
-                        X.loc[X.index[0], "aqius_change"] = pred - X["aqius"].iloc[0]
-                        X.loc[X.index[0], "aqius"] = pred
-                        X.loc[X.index[0], "hour"] = (X["hour"].iloc[0] + 1) % 24
+                    predictions.append(max(0, round(pred, 2)))  # Ensure non-negative AQI, round to 2 decimal places
                     
                     # Calculate future timestamp
                     future_time = current_time + timedelta(hours=i+1)
                     timestamps.append(future_time)
-                
-                # Display predictions in cards
-                pred_cols = st.columns(3)
-                
-                for i, (pred, timestamp) in enumerate(zip(predictions, timestamps)):
-                    category, color, _ = get_aqi_category(pred)
                     
-                    with pred_cols[i]:
-                        st.markdown(f"""
-                        <div class="prediction-card" style="background: linear-gradient(135deg, {color}80, {color}60);">
-                            <div style="font-size: 0.9em; margin-bottom: 0.5rem;">
-                                {timestamp.strftime('%I:%M %p')}
-                            </div>
-                            <div style="font-size: 2em; font-weight: bold; margin: 0.5rem 0;">
-                                {pred:.1f}
-                            </div>
-                            <div style="font-size: 0.8em;">
-                                {category}
-                            </div>
-                        </div>
-                        """, unsafe_allow_html=True)
+                    # Update values for next hour - using your exact logic
+                    current_hour = int(X["hour"].values[0])
+                    current_day = int(X["day"].values[0])
+                    current_month = int(X["month"].values[0])
+                    current_weekday = int(X["weekday"].values[0])
+                    current_aqius = float(X["aqius"].values[0])
+                    
+                    # Update hour
+                    next_hour = (current_hour + 1) % 24
+                    X.loc[X.index[0], "hour"] = next_hour
+                    
+                    # If 23 -> 0, then day also +1
+                    if next_hour == 0:
+                        # Increase day
+                        days_in_month = calendar.monthrange(2025, current_month)[1]  # Assuming 2025
+                        next_day = current_day + 1
+                        next_weekday = (current_weekday + 1) % 7
+                        
+                        # If crossing last day of month
+                        if next_day > days_in_month:
+                            next_day = 1
+                            next_month = current_month + 1
+                            if next_month > 12:
+                                next_month = 1
+                        else:
+                            next_month = current_month
+                            
+                        X.loc[X.index[0], "day"] = next_day
+                        X.loc[X.index[0], "month"] = next_month
+                        X.loc[X.index[0], "weekday"] = next_weekday
+                    
+                    # Update AQI values
+                    X.loc[X.index[0], "aqius_change"] = pred - current_aqius
+                    X.loc[X.index[0], "aqius"] = pred
                 
-                # Prediction confidence and trend
-                st.markdown("### Prediction Analysis")
-                
-                # Create prediction trend chart
+                # Create prediction dataframe
                 pred_df = pd.DataFrame({
-                    'timestamp': timestamps,
-                    'predicted_aqi': predictions
+                    "Timestamp": timestamps,
+                    "Predicted AQI": predictions
                 })
                 
-                # Combine historical and predicted data
-                recent_historical = df_feat.tail(6)[['timestamp', 'aqius']].copy()
-                recent_historical['type'] = 'Historical'
-                recent_historical = recent_historical.rename(columns={'aqius': 'aqi'})
+                # Display predictions in expandable section
+                with st.expander("📊 View Detailed Predictions (72 hours)", expanded=False):
+                    st.dataframe(
+                        pred_df,
+                        use_container_width=True,
+                        column_config={
+                            "Timestamp": st.column_config.DatetimeColumn(
+                                "Date & Time",
+                                format="DD/MM/YYYY HH:mm"
+                            ),
+                            "Predicted AQI": st.column_config.NumberColumn(
+                                "AQI Value",
+                                format="%.2f"
+                            )
+                        }
+                    )
                 
-                pred_df['type'] = 'Predicted'
-                pred_df = pred_df.rename(columns={'predicted_aqi': 'aqi'})
-                
-                combined_df = pd.concat([recent_historical, pred_df], ignore_index=True)
-                
+                # Create prediction trend chart
                 fig_pred = px.line(
-                    combined_df,
-                    x='timestamp',
-                    y='aqi',
-                    color='type',
-                    title='AQI: Historical vs Predicted',
-                    color_discrete_map={'Historical': '#667eea', 'Predicted': '#ff6b6b'}
+                    pred_df,
+                    x="Timestamp",
+                    y="Predicted AQI",
+                    title="AQI Predictions for Next 3 Days (72 Hours)",
+                    line_shape="linear",
+                    markers=True
                 )
                 
-                fig_pred.update_traces(line_width=3, marker_size=8)
+                fig_pred.update_traces(
+                    line=dict(color='#ff6b6b', width=3),
+                    marker=dict(size=4, color='#ff6b6b')
+                )
+                
+                # Add AQI category background colors to prediction chart
+                fig_pred.add_hrect(y0=0, y1=50, fillcolor="green", opacity=0.1, annotation_text="Excellent")
+                fig_pred.add_hrect(y0=50, y1=100, fillcolor="yellow", opacity=0.1, annotation_text="Good")
+                fig_pred.add_hrect(y0=100, y1=150, fillcolor="orange", opacity=0.1, annotation_text="Moderate")
+                fig_pred.add_hrect(y0=150, y1=200, fillcolor="red", opacity=0.1, annotation_text="Unhealthy for Sensitive")
+                fig_pred.add_hrect(y0=200, y1=300, fillcolor="purple", opacity=0.1, annotation_text="Unhealthy")
+                fig_pred.add_hrect(y0=300, y1=500, fillcolor="maroon", opacity=0.1, annotation_text="Hazardous")
+                
                 fig_pred.update_layout(
                     template="plotly_white",
-                    height=400,
+                    height=500,
                     yaxis_title="AQI Value",
-                    xaxis_title="Time"
+                    xaxis_title="Time",
+                    hovermode='x unified'
                 )
                 
                 st.plotly_chart(fig_pred, use_container_width=True)
                 
-                # Trend analysis
-                trend = "improving" if predictions[-1] < predictions[0] else "worsening" if predictions[-1] > predictions[0] else "stable"
-                trend_emoji = "📈" if trend == "worsening" else "📉" if trend == "improving" else "➡️"
+                # Combined historical and predicted data visualization
+                st.markdown("### 📈 Historical vs Predicted AQI")
                 
-                st.info(f"{trend_emoji} **Trend Analysis**: Air quality is expected to be **{trend}** over the next 3 hours.")
+                # Get recent historical data (last 24 hours)
+                recent_historical = df_feat_clean.tail(24)[['timestamp', 'aqius']].copy()
+                recent_historical['timestamp'] = pd.to_datetime(recent_historical['timestamp'])
+                recent_historical['type'] = 'Historical'
+                recent_historical = recent_historical.rename(columns={'aqius': 'aqi'})
+                
+                # Prepare prediction data
+                pred_display_df = pred_df.copy()
+                pred_display_df['type'] = 'Predicted'
+                pred_display_df = pred_display_df.rename(columns={'Predicted AQI': 'aqi'})
+                
+                # Combine data
+                combined_df = pd.concat([recent_historical, pred_display_df], ignore_index=True)
+                
+                fig_combined = px.line(
+                    combined_df,
+                    x='Timestamp',
+                    y='aqi',
+                    color='type',
+                    title='AQI Trend: Last 24 Hours (Historical) + Next 72 Hours (Predicted)',
+                    color_discrete_map={'Historical': '#667eea', 'Predicted': '#ff6b6b'}
+                )
+                
+                fig_combined.update_traces(line_width=3, marker_size=6)
+                fig_combined.update_layout(
+                    template="plotly_white",
+                    height=400,
+                    yaxis_title="AQI Value",
+                    xaxis_title="Time",
+                    hovermode='x unified'
+                )
+                
+                st.plotly_chart(fig_combined, use_container_width=True)
+                
+                # Prediction analysis and statistics
+                col1, col2, col3, col4 = st.columns(4)
+                
+                with col1:
+                    st.metric("Next Hour AQI", f"{predictions[0]:.2f}")
+                with col2:
+                    st.metric("24hr Average", f"{np.mean(predictions[:24]):.2f}")
+                with col3:
+                    st.metric("72hr Average", f"{np.mean(predictions):.2f}")
+                with col4:
+                    st.metric("Max Predicted", f"{max(predictions):.2f}")
+                
+                # Trend analysis
+                short_term_trend = predictions[5] - predictions[0]  # Next 6 hours
+                long_term_trend = predictions[-1] - predictions[0]  # 72 hours
+                
+                if abs(short_term_trend) < 5:
+                    short_trend_text = "stable"
+                    short_trend_emoji = "➡️"
+                elif short_term_trend > 0:
+                    short_trend_text = "worsening"
+                    short_trend_emoji = "📈"
+                else:
+                    short_trend_text = "improving"
+                    short_trend_emoji = "📉"
+                
+                if abs(long_term_trend) < 10:
+                    long_trend_text = "stable"
+                    long_trend_emoji = "➡️"
+                elif long_term_trend > 0:
+                    long_trend_text = "worsening"
+                    long_trend_emoji = "📈"
+                else:
+                    long_trend_text = "improving"
+                    long_trend_emoji = "📉"
+                
+                st.markdown("### 📊 Trend Analysis")
+                
+                trend_col1, trend_col2 = st.columns(2)
+                
+                with trend_col1:
+                    st.info(f"{short_trend_emoji} **Short-term (6 hours)**: Air quality is expected to be **{short_trend_text}** (Change: {short_term_trend:+.2f})")
+                
+                with trend_col2:
+                    st.info(f"{long_trend_emoji} **Long-term (3 days)**: Overall trend is **{long_trend_text}** (Change: {long_term_trend:+.2f})")
                 
             else:
                 st.warning("⚠️ Insufficient feature data for predictions. Missing columns: " + 
@@ -444,6 +549,12 @@ if os.path.exists(model_path) and os.path.exists(feature_file):
     except Exception as e:
         st.error(f"❌ Error generating predictions: {str(e)}")
         st.info("💡 This might be due to missing model features or corrupted model file.")
+        
+        # Debug information
+        with st.expander("🔍 Debug Information"):
+            st.text(f"Error details: {str(e)}")
+            st.text(f"Model path exists: {os.path.exists(model_path)}")
+            st.text(f"Feature file exists: {os.path.exists(feature_file)}")
 else:
     missing_items = []
     if not os.path.exists(model_path):
