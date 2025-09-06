@@ -1549,3 +1549,4 @@ timestamp,city,state,country,latitude,longitude,aqius,mainus,aqicn,maincn,temper
 2025-09-05T21:00:00.000Z,Islamabad,Islamabad,Pakistan,33.697612,72.971079,59,p2,19,p2,25,71,1006,98,2.4
 2025-09-05T22:00:00.000Z,Islamabad,Islamabad,Pakistan,33.697612,72.971079,59,p2,19,p2,25,73,1006,102,2.26
 2025-09-05T23:00:00.000Z,Islamabad,Islamabad,Pakistan,33.697612,72.971079,57,p2,18,p2,24,74,1007,97,2.37
+2025-09-06T00:00:00.000Z,Islamabad,Islamabad,Pakistan,33.697612,72.971079,58,p2,19,p2,24,74,1007,92,2.54
