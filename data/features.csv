@@ -1618,3 +1618,4 @@ timestamp,city,state,country,lat,lon,aqius,mainus,aqicn,maincn,temperature,humid
 2025-09-08 22:00:00+00:00,Islamabad,Islamabad,Pakistan,33.697612,72.971079,53,p2,14,p2,25,73,1008,20,0.4,22,8,9,0,-29.0,56.0
 2025-09-08 23:00:00+00:00,Islamabad,Islamabad,Pakistan,33.697612,72.971079,60,p2,20,p2,24,74,1008,328,0.39,23,8,9,0,7.0,61.0
 2025-09-09 01:00:00+00:00,Islamabad,Islamabad,Pakistan,33.697612,72.971079,57,p2,17,p2,24,76,1008,17,0.88,1,9,9,1,-3.0,81.0
+2025-09-09 02:00:00+00:00,Islamabad,Islamabad,Pakistan,33.697612,72.971079,56,p2,17,p2,25,72,1009,335,0.63,2,9,9,1,-1.0,84.0
