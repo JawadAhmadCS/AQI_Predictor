@@ -5480,3 +5480,4 @@ timestamp,city,state,country,lat,lon,aqius,mainus,aqicn,maincn,temperature,humid
 2026-03-06 08:00:00+00:00,Islamabad,Islamabad,Pakistan,33.697612,72.971079,157,p2,86,p2,30,25,1008,260,3.06,8,6,3,4,29.0,131.0
 2026-03-06 09:00:00+00:00,Islamabad,Islamabad,Pakistan,33.697612,72.971079,152,p2,78,p2,31,24,1007,260,3.06,9,6,3,4,-5.0,125.0
 2026-03-06 10:00:00+00:00,Islamabad,Islamabad,Pakistan,33.697612,72.971079,131,p2,66,p2,30,25,1006,240,3.61,10,6,3,4,-21.0,147.0
+2026-03-06 11:00:00+00:00,Islamabad,Islamabad,Pakistan,33.697612,72.971079,131,p2,66,p2,30,27,1006,220,3.61,11,6,3,4,0.0,147.0
