@@ -5496,3 +5496,4 @@ timestamp,city,state,country,latitude,longitude,aqius,mainus,aqicn,maincn,temper
 2026-03-07T01:00:00.000Z,Islamabad,Islamabad,Pakistan,33.697612,72.971079,165,p2,101,p2,19,64,1011,30,3.61
 2026-03-07T03:00:00.000Z,Islamabad,Islamabad,Pakistan,33.697612,72.971079,173,p2,115,p2,20,60,1012,30,3.06
 2026-03-07T04:00:00.000Z,Islamabad,Islamabad,Pakistan,33.697612,72.971079,178,p2,124,p2,22,53,1012,40,3.06
+2026-03-07T06:00:00.000Z,Islamabad,Islamabad,Pakistan,33.697612,72.971079,175,p2,119,p2,26,39,1013,50,3.61
